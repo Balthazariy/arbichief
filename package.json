@@ -15,7 +15,11 @@
         "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && npm run electron\"",
         "electron:build": "npm run build && electron-builder",
         "electron:build:win": "npm run build && electron-builder --win --x64",
-        "electron:build:all": "npm run build && electron-builder --win --x64 --ia32"
+        "electron:build:all": "npm run build && electron-builder --win --x64 --ia32",
+        "cap:sync": "cap sync",
+        "cap:add:android": "cap add android",
+        "android:build": "npm run build && cap sync android",
+        "android:open": "cap open android"
     },
     "dependencies": {
         "@github/spark": ">=0.43.1 <1",
@@ -81,6 +85,9 @@
         "zod": "^3.25.76"
     },
     "devDependencies": {
+        "@capacitor/android": "^8.0.2",
+        "@capacitor/cli": "^8.0.2",
+        "@capacitor/core": "^8.0.2",
         "@eslint/js": "^9.21.0",
         "@tailwindcss/postcss": "^4.1.8",
         "@types/react": "^19.0.10",

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">arbichief</string>
+    <string name="title_activity_main">arbichief</string>
+    <string name="package_name">mk.ua.cheb</string>
+    <string name="custom_url_scheme">mk.ua.cheb</string>
+</resources>
