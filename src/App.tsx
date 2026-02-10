@@ -1,4 +1,4 @@
-import { Trophy, Users, UsersThree, Table } from '@phosphor-icons/react';
+import { Trophy, Users, UsersThree, Table, DownloadSimple } from '@phosphor-icons/react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
@@ -7,8 +7,9 @@ import DashboardView from './components/DashboardView';
 import TournamentsView from './components/TournamentsView';
 import PlayersView from './components/PlayersView';
 import TeamsView from './components/TeamsView';
+import ExportView from './components/ExportView';
 
-type View = 'dashboard' | 'tournaments' | 'players' | 'teams';
+type View = 'dashboard' | 'tournaments' | 'players' | 'teams' | 'export';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -44,6 +45,7 @@ function App() {
     { id: 'tournaments' as const, label: 'Турніри', icon: Trophy },
     { id: 'players' as const, label: 'Гравці', icon: Users },
     { id: 'teams' as const, label: 'Команди', icon: UsersThree },
+    { id: 'export' as const, label: 'Експорт', icon: DownloadSimple },
   ];
 
   return (
@@ -94,6 +96,7 @@ function App() {
           {currentView === 'tournaments' && <TournamentsView />}
           {currentView === 'players' && <PlayersView />}
           {currentView === 'teams' && <TeamsView />}
+          {currentView === 'export' && <ExportView />}
         </main>
       </div>
 

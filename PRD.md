@@ -55,11 +55,11 @@ This application requires sophisticated state management for tournament logic, m
 - **Success criteria**: Table sorts correctly by points and tie-breaks, updates within 1 second of result entry, displays all relevant statistics
 
 ### Reports and Export
-- **Functionality**: Generate and export tournament data in multiple formats (JSON, CSV) with final standings, crosstables, and player cards
+- **Functionality**: Generate and export tournament data in multiple formats (JSON, CSV) with final standings, crosstables, and player cards through dedicated export page
 - **Purpose**: Creates archival records and shareable results for tournament documentation and publication
-- **Trigger**: User clicks "Експорт" button from tournament view
-- **Progression**: Tournament View → Export Menu → Select Format (JSON/CSV) → Choose Report Type → Generate → Download File
-- **Success criteria**: Exported files contain complete tournament data, are properly formatted, and can be imported to spreadsheet software
+- **Trigger**: User navigates to "Експорт" section from main navigation
+- **Progression**: Export Page → Select Tournament → Choose Format (JSON/CSV) → Review Export Contents → Click Export → Download File
+- **Success criteria**: Exported files contain complete tournament data (tournament info, participants, matches, standings with tie-breaks), are properly formatted, and can be imported to spreadsheet software or re-imported to system
 
 ## Edge Case Handling
 
