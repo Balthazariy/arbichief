@@ -1,8 +1,9 @@
-import { DownloadSimple, FileCsv, FileJs, Trophy, Calendar, Users } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { DownloadSimple, FileCsv, FileJs, Trophy, Calendar, Users, UploadSimple, CheckCircle, WarningCircle } from '@phosphor-icons/react';
+import { useState, useRef } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Tournament, Player, Match } from '@/lib/types';
 import { ExportService, JSONExportFormat, CSVExportFormat, ExportData } from '@/lib/services/ExportService';
+import { ImportService, JSONImportValidator, ImportResult } from '@/lib/services/ImportService';
 import { StandingsCalculator } from '@/lib/services/StandingsService';
 import { TieBreakService } from '@/lib/services/TieBreakService';
 import { Button } from './ui/button';
@@ -10,19 +11,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 type ExportFormatType = 'json' | 'csv';
 
 export default function ExportView() {
-  const [tournaments] = useKV<Tournament[]>('tournaments', []);
-  const [players] = useKV<Player[]>('players', []);
-  const [matches] = useKV<Match[]>('matches', []);
+  const [tournaments, setTournaments] = useKV<Tournament[]>('tournaments', []);
+  const [players, setPlayers] = useKV<Player[]>('players', []);
+  const [matches, setMatches] = useKV<Match[]>('matches', []);
   
   const [selectedTournamentId, setSelectedTournamentId] = useState<string>('');
   const [selectedFormat, setSelectedFormat] = useState<ExportFormatType>('json');
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeTournaments = tournaments?.filter(t => t.status !== 'draft') || [];
   const selectedTournament = tournaments?.find(t => t.id === selectedTournamentId);
@@ -84,6 +89,62 @@ export default function ExportView() {
     }
   };
 
+  const handleImportClick = () => {
+    setImportResult(null);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportResult(null);
+
+    try {
+      const importService = new ImportService(new JSONImportValidator());
+      const result = await importService.importFromFile(file);
+      
+      setImportResult(result);
+
+      if (result.success && result.data) {
+        const mergedData = await importService.mergeImportedData(
+          result.data,
+          tournaments || [],
+          players || [],
+          matches || []
+        );
+
+        setTournaments((current) => [...(current || []), mergedData.tournament]);
+        
+        if (mergedData.newPlayers.length > 0) {
+          setPlayers((current) => [...(current || []), ...mergedData.newPlayers]);
+        }
+        
+        if (mergedData.newMatches.length > 0) {
+          setMatches((current) => [...(current || []), ...mergedData.newMatches]);
+        }
+
+        toast.success(`Турнір "${mergedData.tournament.name}" успішно імпортовано!`);
+      } else {
+        toast.error('Помилка імпорту файлу');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      setImportResult({
+        success: false,
+        message: 'Помилка під час імпорту',
+        errors: [error instanceof Error ? error.message : 'Невідома помилка'],
+      });
+      toast.error('Помилка під час імпорту файлу');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const formatTypes = [
     {
       id: 'json' as ExportFormatType,
@@ -116,12 +177,43 @@ export default function ExportView() {
     <div className="space-y-6 pb-20 md:pb-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Експорт турнірів
+          Експорт та Імпорт турнірів
         </h1>
         <p className="text-muted-foreground mt-2">
-          Експортуйте дані турнірів у JSON або CSV форматах для архівування та аналізу
+          Експортуйте та імпортуйте дані турнірів у JSON форматі для архівування та обміну
         </p>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {importResult && (
+        <Alert variant={importResult.success ? 'default' : 'destructive'}>
+          {importResult.success ? (
+            <CheckCircle className="h-4 w-4" />
+          ) : (
+            <WarningCircle className="h-4 w-4" />
+          )}
+          <AlertTitle>
+            {importResult.success ? 'Успішно' : 'Помилка'}
+          </AlertTitle>
+          <AlertDescription>
+            <p className="mb-2">{importResult.message}</p>
+            {importResult.errors && importResult.errors.length > 0 && (
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {importResult.errors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -265,6 +357,49 @@ export default function ExportView() {
         </div>
 
         <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Імпорт турніру</CardTitle>
+              <CardDescription>
+                Завантажте раніше експортований JSON файл турніру
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                onClick={handleImportClick}
+                disabled={isImporting}
+                className="w-full"
+                size="lg"
+                variant="secondary"
+              >
+                <UploadSimple size={20} weight="bold" className="mr-2" />
+                {isImporting ? 'Імпорт...' : 'Імпортувати турнір'}
+              </Button>
+
+              <div className="text-xs text-muted-foreground space-y-2 pt-2">
+                <p className="font-medium">Що відбудеться при імпорті:</p>
+                <ul className="space-y-1 pl-4">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">→</span>
+                    <span>Турнір буде створено як новий (чернетка)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">→</span>
+                    <span>Існуючі гравці будуть повторно використані</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">→</span>
+                    <span>Нові гравці будуть додані до бази</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">→</span>
+                    <span>Результати партій будуть скинуті</span>
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Дії експорту</CardTitle>

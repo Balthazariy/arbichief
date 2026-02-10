@@ -55,11 +55,11 @@ This application requires sophisticated state management for tournament logic, m
 - **Success criteria**: Table sorts correctly by points and tie-breaks, updates within 1 second of result entry, displays all relevant statistics
 
 ### Reports and Export
-- **Functionality**: Generate and export tournament data in multiple formats (JSON, CSV) with final standings, crosstables, and player cards through dedicated export page
-- **Purpose**: Creates archival records and shareable results for tournament documentation and publication
-- **Trigger**: User navigates to "Експорт" section from main navigation
-- **Progression**: Export Page → Select Tournament → Choose Format (JSON/CSV) → Review Export Contents → Click Export → Download File
-- **Success criteria**: Exported files contain complete tournament data (tournament info, participants, matches, standings with tie-breaks), are properly formatted, and can be imported to spreadsheet software or re-imported to system
+- **Functionality**: Generate and export tournament data in multiple formats (JSON, CSV) with final standings, crosstables, and player cards through dedicated export page. Import previously exported JSON tournament files to restore or clone tournament data.
+- **Purpose**: Creates archival records and shareable results for tournament documentation and publication. Enables tournament data portability, backup restoration, and template reuse by importing from JSON files.
+- **Trigger**: User navigates to "Експорт" section from main navigation. For import, user clicks "Імпортувати турнір" button and selects JSON file.
+- **Progression Export**: Export Page → Select Tournament → Choose Format (JSON/CSV) → Review Export Contents → Click Export → Download File. **Progression Import**: Export Page → Click Import Button → Select JSON File → System Validates File → Review Import Summary → Confirm → New Tournament Created as Draft → Success Notification
+- **Success criteria**: Exported files contain complete tournament data (tournament info, participants, matches, standings with tie-breaks), are properly formatted, and can be imported to spreadsheet software or re-imported to system. Imported tournaments successfully create new draft tournaments with all players and match structures preserved. Existing players are recognized by unique code or name match; new players are added to database. Match results are reset to allow fresh tournament execution.
 
 ### Theme Switching
 - **Functionality**: Toggle between light and dark themes with persistent preference storage
@@ -92,6 +92,9 @@ This application requires sophisticated state management for tournament logic, m
 - **Invalid Results** - Prevent impossible results (both players winning) and require confirmation for unusual outcomes
 - **Data Persistence** - All data stored in browser using IndexedDB (via OOP repository pattern), survives page refreshes and session closures
 - **Database Migration** - Legacy useKV data automatically migrated to IndexedDB on first load
+- **Import Validation** - Imported JSON files validated for required fields (tournament structure, players array, matches array) with detailed error messages for missing or malformed data
+- **Player Deduplication** - During import, system matches imported players with existing database by unique code or name combination to avoid duplicates while adding genuinely new players
+- **Tournament Cloning** - Imported tournaments receive new ID and set to draft status, allowing tournament templates to be reused for multiple events
 - **Offline Support** - Full functionality available offline as a Progressive Web App
 - **Theme Persistence** - User theme preference (light/dark) stored in useKV and automatically restored on app load
 - **Past Reminders** - Reminders in the past are still editable and toggleable but display "notified" badge if already triggered (for one-time) or "last notified" date (for recurring)
@@ -127,6 +130,9 @@ This application requires sophisticated state management for tournament logic, m
 - **ExportService** - Exports tournament data using format pattern
 - **JSONExportFormat** - JSON export implementation
 - **CSVExportFormat** - CSV export implementation
+- **ImportService** - Imports tournament data with validation and merging logic
+- **JSONImportValidator** - Validates JSON import file structure
+- **CSVImportValidator** - Placeholder for future CSV import support
 
 ## Design Direction
 
@@ -216,6 +222,9 @@ Animations should emphasize state changes and guide attention during critical to
   - Shuffle (Pairing/жеребкування) for pairing generation
   - Table (Standings) for tournament table view
   - DownloadSimple (Export) for report generation
+  - UploadSimple (Import) for tournament import
+  - CheckCircle (Success) for successful import validation
+  - WarningCircle (Error) for failed import validation
   - Plus (Add) for create actions
   - PencilSimple (Edit) for modification
   - Trash (Delete) for removal operations

@@ -13,3 +13,11 @@ export {
   type ExportFormat,
   type ExportData 
 } from './ExportService';
+export {
+  ImportService,
+  JSONImportValidator,
+  CSVImportValidator,
+  type ImportData,
+  type ImportResult,
+  type ImportValidator
+} from './ImportService';
