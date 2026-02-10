@@ -33,6 +33,7 @@ export interface Tournament {
   startDate: string;
   endDate: string;
   participants: string[];
+  teamParticipants?: string[];
   currentRound: number;
   totalRounds: number;
   status: 'draft' | 'active' | 'completed';

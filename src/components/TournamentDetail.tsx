@@ -1,7 +1,7 @@
 import { ArrowLeft, Plus, Shuffle, Trophy, DownloadSimple, CheckCircle, Circle } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Tournament, Player, Match, MatchResult } from '@/lib/types';
+import { Tournament, Player, Match, MatchResult, Team } from '@/lib/types';
 import { generateSwissPairings, generateRoundRobinPairings, calculateStandings } from '@/lib/tournament';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -23,8 +23,10 @@ interface TournamentDetailProps {
 
 export default function TournamentDetail({ tournament, onBack, onUpdate }: TournamentDetailProps) {
   const [players] = useKV<Player[]>('players', []);
+  const [teams] = useKV<Team[]>('teams', []);
   const [matches, setMatches] = useKV<Match[]>(`matches-${tournament.id}`, []);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>(tournament.participants);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>(tournament.teamParticipants || []);
   const [resultDialog, setResultDialog] = useState<{ open: boolean; match: Match | null }>({
     open: false,
     match: null,
@@ -32,28 +34,41 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
   const [selectedResult, setSelectedResult] = useState<MatchResult>(null);
 
   const handleAddParticipants = () => {
-    const updated = { ...tournament, participants: selectedPlayers };
-    onUpdate(updated);
-    toast.success('Учасників оновлено');
+    if (tournament.format === 'team') {
+      const updated = { ...tournament, teamParticipants: selectedTeams };
+      onUpdate(updated);
+      toast.success('Команди оновлено');
+    } else {
+      const updated = { ...tournament, participants: selectedPlayers };
+      onUpdate(updated);
+      toast.success('Учасників оновлено');
+    }
   };
 
   const handleStartTournament = () => {
-    if (tournament.participants.length < 2) {
-      toast.error('Додайте принаймні 2 учасники');
+    const participantCount = tournament.format === 'team' 
+      ? (tournament.teamParticipants?.length || 0)
+      : tournament.participants.length;
+
+    if (participantCount < 2) {
+      toast.error(tournament.format === 'team' ? 'Додайте принаймні 2 команди' : 'Додайте принаймні 2 учасники');
       return;
     }
 
     let newMatches: Match[] = [];
+    const participantsForPairing = tournament.format === 'team' 
+      ? (tournament.teamParticipants || [])
+      : tournament.participants;
     
     if (tournament.system === 'roundrobin') {
       newMatches = generateRoundRobinPairings(
-        tournament.participants,
+        participantsForPairing,
         tournament.id,
         tournament.totalRounds
       );
     } else {
       newMatches = generateSwissPairings(
-        tournament.participants,
+        participantsForPairing,
         [],
         1,
         tournament.id,
@@ -87,8 +102,12 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
     }
 
     const nextRound = tournament.currentRound + 1;
+    const participantsForPairing = tournament.format === 'team' 
+      ? (tournament.teamParticipants || [])
+      : tournament.participants;
+    
     const newPairings = generateSwissPairings(
-      tournament.participants,
+      participantsForPairing,
       matches || [],
       nextRound,
       tournament.id,
@@ -125,16 +144,28 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
   };
 
   const handleExport = (format: 'json' | 'csv') => {
-    const standings = calculateStandings(tournament.participants, matches || []);
+    const participants = tournament.format === 'team' 
+      ? (tournament.teamParticipants || [])
+      : tournament.participants;
+    const standings = calculateStandings(participants, matches || []);
     const playersMap = new Map((players || []).map(p => [p.id, p]));
+    const teamsMap = new Map((teams || []).map(t => [t.id, t]));
 
     if (format === 'json') {
       const data = {
         tournament,
-        standings: standings.map(s => ({
-          player: playersMap.get(s.participantId),
-          ...s,
-        })),
+        standings: standings.map(s => {
+          if (tournament.format === 'team') {
+            return {
+              team: teamsMap.get(s.participantId),
+              ...s,
+            };
+          }
+          return {
+            player: playersMap.get(s.participantId),
+            ...s,
+          };
+        }),
         matches: matches || [],
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -145,11 +176,18 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
       a.click();
       toast.success('Експорт завершено');
     } else {
+      const headerLabel = tournament.format === 'team' ? 'Команда' : 'ПІБ';
       const csvLines = [
-        'Місце,ПІБ,Очки,Партій,Перемог,Нічиїх,Поразок',
+        `Місце,${headerLabel},Очки,Партій,Перемог,Нічиїх,Поразок`,
         ...standings.map((s, idx) => {
-          const player = playersMap.get(s.participantId);
-          const name = player ? `${player.surname} ${player.name}` : 'Невідомий';
+          let name = 'Невідомий';
+          if (tournament.format === 'team') {
+            const team = teamsMap.get(s.participantId);
+            name = team ? team.name : 'Невідома команда';
+          } else {
+            const player = playersMap.get(s.participantId);
+            name = player ? `${player.surname} ${player.name}` : 'Невідомий';
+          }
           return `${idx + 1},${name},${s.points},${s.matchesPlayed},${s.wins},${s.draws},${s.losses}`;
         }),
       ];
@@ -171,14 +209,38 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
     );
   };
 
+  const toggleTeamSelection = (teamId: string) => {
+    setSelectedTeams((current) =>
+      current.includes(teamId)
+        ? current.filter((id) => id !== teamId)
+        : [...current, teamId]
+    );
+  };
+
   const getPlayerName = (playerId: string | null) => {
     if (!playerId) return 'БАЙ';
     const player = (players || []).find((p) => p.id === playerId);
     return player ? `${player.surname} ${player.name}` : 'Невідомий';
   };
 
+  const getTeamName = (teamId: string | null) => {
+    if (!teamId) return 'БАЙ';
+    const team = (teams || []).find((t) => t.id === teamId);
+    return team ? team.name : 'Невідома команда';
+  };
+
+  const getParticipantName = (participantId: string | null) => {
+    if (tournament.format === 'team') {
+      return getTeamName(participantId);
+    }
+    return getPlayerName(participantId);
+  };
+
   const currentRoundMatches = (matches || []).filter(m => m.round === tournament.currentRound);
-  const standings = calculateStandings(tournament.participants, matches || []);
+  const participants = tournament.format === 'team' 
+    ? (tournament.teamParticipants || [])
+    : tournament.participants;
+  const standings = calculateStandings(participants, matches || []);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -217,46 +279,81 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
         <TabsContent value="participants">
           <Card>
             <CardHeader>
-              <CardTitle>Учасники турніру</CardTitle>
+              <CardTitle>
+                {tournament.format === 'team' ? 'Команди турніру' : 'Учасники турніру'}
+              </CardTitle>
               <CardDescription>
-                {tournament.participants.length} учасників обрано
+                {tournament.format === 'team'
+                  ? `${selectedTeams.length} команд обрано`
+                  : `${tournament.participants.length} учасників обрано`}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {tournament.status === 'draft' ? (
                 <div className="space-y-4">
-                  <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-4">
-                    {(players || []).length === 0 ? (
-                      <p className="text-muted-foreground text-center py-8">
-                        Спочатку додайте гравців у базу даних
-                      </p>
-                    ) : (
-                      (players || []).map((player) => (
-                        <div key={player.id} className="flex items-center gap-3 p-2 hover:bg-muted rounded">
-                          <Checkbox
-                            id={player.id}
-                            checked={selectedPlayers.includes(player.id)}
-                            onCheckedChange={() => togglePlayerSelection(player.id)}
-                          />
-                          <Label htmlFor={player.id} className="flex-1 cursor-pointer">
-                            {player.surname} {player.name} {player.lastname}
-                            <span className="text-muted-foreground ml-2">
-                              ({player.rating || 'без рейтингу'})
-                            </span>
-                          </Label>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                  {tournament.format === 'team' ? (
+                    <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-4">
+                      {(teams || []).length === 0 ? (
+                        <p className="text-muted-foreground text-center py-8">
+                          Спочатку створіть команди
+                        </p>
+                      ) : (
+                        (teams || []).map((team) => (
+                          <div key={team.id} className="flex items-center gap-3 p-2 hover:bg-muted rounded">
+                            <Checkbox
+                              id={team.id}
+                              checked={selectedTeams.includes(team.id)}
+                              onCheckedChange={() => toggleTeamSelection(team.id)}
+                            />
+                            <Label htmlFor={team.id} className="flex-1 cursor-pointer">
+                              <div className="font-medium">{team.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {team.players.length} гравців на дошках, {team.reserves.length} у запасі
+                              </div>
+                            </Label>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-4">
+                      {(players || []).length === 0 ? (
+                        <p className="text-muted-foreground text-center py-8">
+                          Спочатку додайте гравців у базу даних
+                        </p>
+                      ) : (
+                        (players || []).map((player) => (
+                          <div key={player.id} className="flex items-center gap-3 p-2 hover:bg-muted rounded">
+                            <Checkbox
+                              id={player.id}
+                              checked={selectedPlayers.includes(player.id)}
+                              onCheckedChange={() => togglePlayerSelection(player.id)}
+                            />
+                            <Label htmlFor={player.id} className="flex-1 cursor-pointer">
+                              {player.surname} {player.name} {player.lastname}
+                              <span className="text-muted-foreground ml-2">
+                                ({player.rating || 'без рейтингу'})
+                              </span>
+                            </Label>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <Button
                       onClick={handleAddParticipants}
                       className="flex-1 bg-accent text-accent-foreground hover:brightness-110"
-                      disabled={selectedPlayers.length === 0}
+                      disabled={
+                        tournament.format === 'team'
+                          ? selectedTeams.length === 0
+                          : selectedPlayers.length === 0
+                      }
                     >
-                      Підтвердити учасників
+                      {tournament.format === 'team' ? 'Підтвердити команди' : 'Підтвердити учасників'}
                     </Button>
-                    {tournament.participants.length >= 2 && (
+                    {((tournament.format === 'team' && selectedTeams.length >= 2) ||
+                      (tournament.format === 'individual' && tournament.participants.length >= 2)) && (
                       <Button onClick={handleStartTournament} className="flex-1">
                         <Shuffle size={20} />
                         Розпочати турнір
@@ -266,12 +363,31 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {tournament.participants.map((playerId, idx) => (
-                    <div key={playerId} className="flex items-center gap-3 p-3 border rounded">
-                      <Badge variant="outline">{idx + 1}</Badge>
-                      <span className="font-medium">{getPlayerName(playerId)}</span>
-                    </div>
-                  ))}
+                  {tournament.format === 'team' ? (
+                    (tournament.teamParticipants || []).map((teamId, idx) => {
+                      const team = (teams || []).find((t) => t.id === teamId);
+                      return (
+                        <div key={teamId} className="flex items-center gap-3 p-3 border rounded">
+                          <Badge variant="outline">{idx + 1}</Badge>
+                          <div className="flex-1">
+                            <div className="font-medium">{getTeamName(teamId)}</div>
+                            {team && (
+                              <div className="text-sm text-muted-foreground">
+                                {team.players.length} гравців на дошках
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    tournament.participants.map((playerId, idx) => (
+                      <div key={playerId} className="flex items-center gap-3 p-3 border rounded">
+                        <Badge variant="outline">{idx + 1}</Badge>
+                        <span className="font-medium">{getPlayerName(playerId)}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </CardContent>
@@ -317,11 +433,11 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
                             </Badge>
                             <div className="flex items-center gap-3 flex-1">
                               <span className="font-medium">
-                                {getPlayerName(match.whiteId)}
+                                {getParticipantName(match.whiteId)}
                               </span>
                               <span className="text-muted-foreground">vs</span>
                               <span className="font-medium">
-                                {getPlayerName(match.blackId)}
+                                {getParticipantName(match.blackId)}
                               </span>
                             </div>
                           </div>
@@ -363,7 +479,7 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
             <CardHeader>
               <CardTitle>Турнірна таблиця</CardTitle>
               <CardDescription>
-                Поточні позиції учасників
+                Поточні позиції {tournament.format === 'team' ? 'команд' : 'учасників'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -379,7 +495,7 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-16">Місце</TableHead>
-                        <TableHead>Гравець</TableHead>
+                        <TableHead>{tournament.format === 'team' ? 'Команда' : 'Гравець'}</TableHead>
                         <TableHead className="text-center">Очки</TableHead>
                         <TableHead className="text-center">Партії</TableHead>
                         <TableHead className="text-center">+</TableHead>
@@ -394,7 +510,7 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
                             {idx + 1}
                           </TableCell>
                           <TableCell className="font-medium">
-                            {getPlayerName(standing.participantId)}
+                            {getParticipantName(standing.participantId)}
                           </TableCell>
                           <TableCell className="text-center font-bold text-lg">
                             {standing.points}
@@ -466,8 +582,8 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
             <DialogDescription>
               {resultDialog.match && (
                 <>
-                  {getPlayerName(resultDialog.match.whiteId)} vs{' '}
-                  {getPlayerName(resultDialog.match.blackId)}
+                  {getParticipantName(resultDialog.match.whiteId)} vs{' '}
+                  {getParticipantName(resultDialog.match.blackId)}
                 </>
               )}
             </DialogDescription>

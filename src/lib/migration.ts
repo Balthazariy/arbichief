@@ -48,7 +48,11 @@ export class DataMigrationService {
       if (tournamentsData && tournamentsData.length > 0) {
         for (const tournament of tournamentsData) {
           try {
-            await db.tournaments.create(tournament);
+            const migratedTournament = {
+              ...tournament,
+              teamParticipants: tournament.teamParticipants || []
+            };
+            await db.tournaments.create(migratedTournament);
           } catch (e) {
             console.warn('Tournament already exists or error:', e);
           }

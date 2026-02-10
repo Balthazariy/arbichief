@@ -13,11 +13,11 @@ This application requires sophisticated state management for tournament logic, m
 ## Essential Features
 
 ### Tournament Management
-- **Functionality**: Create, edit, view, and archive tournaments with configurable parameters (format, system, scoring rules, tie-breaks)
-- **Purpose**: Enables organizers to set up tournaments matching their specific requirements for chess or checkers competitions
+- **Functionality**: Create, edit, view, and archive tournaments with configurable parameters (format, system, scoring rules, tie-breaks). Tournaments can be either individual (with players as participants) or team-based (with teams as participants).
+- **Purpose**: Enables organizers to set up tournaments matching their specific requirements for chess or checkers competitions, supporting both individual and team formats
 - **Trigger**: User clicks "Створити турнір" button from dashboard
-- **Progression**: Dashboard → New Tournament Form → Configure Format/System/Rules → Save → Tournament Detail View → Ready for Player Registration
-- **Success criteria**: Tournament is created with all parameters saved and appears in active tournaments list; can proceed to add players and generate pairings
+- **Progression**: Dashboard → New Tournament Form → Configure Format (Individual/Team)/System/Rules → Save → Tournament Detail View → Select Participants (Players or Teams) → Ready for Tournament Start
+- **Success criteria**: Tournament is created with all parameters saved and appears in active tournaments list; can proceed to add players or teams based on tournament format and generate pairings
 
 ### Player Management
 - **Functionality**: Maintain database of players with profiles (name, surname, lastname, unique code, rating, gender)
@@ -27,11 +27,11 @@ This application requires sophisticated state management for tournament logic, m
 - **Success criteria**: Player profiles persist across sessions, can be searched/filtered, and are available for tournament registration
 
 ### Team Management
-- **Functionality**: Create teams, assign players to board positions and reserves, manage team compositions
-- **Purpose**: Supports team-based tournament formats where players compete as organized squads with specific board assignments
-- **Trigger**: User selects team format during tournament creation or navigates to "Команди" section
-- **Progression**: Team List → Create Team → Name Team → Assign Players to Boards → Set Reserves → Save → Team Available for Tournament
-- **Success criteria**: Teams maintain player assignments, enforce board rules, and calculate team scores correctly from individual board results
+- **Functionality**: Create teams, assign players to board positions and reserves, manage team compositions. Teams can be selected as participants in team-format tournaments.
+- **Purpose**: Supports team-based tournament formats where players compete as organized squads with specific board assignments. Teams can participate in tournaments as unified entities.
+- **Trigger**: User selects team format during tournament creation or navigates to "Команди" section to create teams
+- **Progression**: Team List → Create Team → Name Team → Search and Assign Players to Boards → Set Reserves → Save → Team Available for Tournament Selection → Add to Team Tournament
+- **Success criteria**: Teams maintain player assignments, enforce board rules, and can be selected as participants in team-format tournaments. Tournament standings correctly display team names and results.
 
 ### Pairing Generation (Жеребкування)
 - **Functionality**: Automatically generate match pairings for each round based on tournament system (Swiss, Round-robin)

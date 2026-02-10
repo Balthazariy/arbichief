@@ -1,7 +1,7 @@
 import { DownloadSimple, FileCsv, FileJs, Trophy, Calendar, Users, UploadSimple, CheckCircle, WarningCircle } from '@phosphor-icons/react';
 import { useState, useRef } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Tournament, Player, Match } from '@/lib/types';
+import { Tournament, Player, Match, Team } from '@/lib/types';
 import { ExportService, JSONExportFormat, CSVExportFormat, ExportData } from '@/lib/services/ExportService';
 import { ImportService, JSONImportValidator, ImportResult } from '@/lib/services/ImportService';
 import { StandingsCalculator } from '@/lib/services/StandingsService';
@@ -20,6 +20,7 @@ type ExportFormatType = 'json' | 'csv';
 export default function ExportView() {
   const [tournaments, setTournaments] = useKV<Tournament[]>('tournaments', []);
   const [players, setPlayers] = useKV<Player[]>('players', []);
+  const [teams, setTeams] = useKV<Team[]>('teams', []);
   const [matches, setMatches] = useKV<Match[]>('matches', []);
   
   const [selectedTournamentId, setSelectedTournamentId] = useState<string>('');
@@ -48,12 +49,16 @@ export default function ExportView() {
       }
 
       const tournamentMatches = matches?.filter(m => m.tournamentId === selectedTournamentId) || [];
+      const participants = tournament.format === 'team' 
+        ? (tournament.teamParticipants || [])
+        : tournament.participants;
       const tournamentPlayers = players?.filter(p => tournament.participants.includes(p.id)) || [];
+      const tournamentTeams = teams?.filter(t => (tournament.teamParticipants || []).includes(t.id)) || [];
 
       const standingsCalculator = new StandingsCalculator();
       const tieBreakService = new TieBreakService();
       const standings = standingsCalculator.calculateStandings(
-        tournament.participants,
+        participants,
         tournamentMatches
       );
       const standingsWithTieBreaks = tieBreakService.enrichStandingsWithTieBreaks(
@@ -64,6 +69,7 @@ export default function ExportView() {
       const exportData: ExportData = {
         tournament,
         players: tournamentPlayers,
+        teams: tournamentTeams,
         matches: tournamentMatches,
         standings: standingsWithTieBreaks,
       };
@@ -112,6 +118,7 @@ export default function ExportView() {
           result.data,
           tournaments || [],
           players || [],
+          teams || [],
           matches || []
         );
 
@@ -119,6 +126,10 @@ export default function ExportView() {
         
         if (mergedData.newPlayers.length > 0) {
           setPlayers((current) => [...(current || []), ...mergedData.newPlayers]);
+        }
+        
+        if (mergedData.newTeams && mergedData.newTeams.length > 0) {
+          setTeams((current) => [...(current || []), ...mergedData.newTeams]);
         }
         
         if (mergedData.newMatches.length > 0) {
@@ -167,7 +178,9 @@ export default function ExportView() {
     const completedMatches = tournamentMatches.filter(m => m.result !== null);
     
     return {
-      participants: tournament.participants.length,
+      participants: tournament.format === 'team' 
+        ? (tournament.teamParticipants?.length || 0)
+        : tournament.participants.length,
       matches: tournamentMatches.length,
       completed: completedMatches.length,
     };

@@ -1,8 +1,9 @@
-import { Tournament, Match, Player, Reminder } from '../types';
+import { Tournament, Match, Player, Reminder, Team } from '../types';
 
 export interface ImportData {
   tournament?: Tournament;
   players?: Player[];
+  teams?: Team[];
   matches?: Match[];
   standings?: any[];
   reminders?: Reminder[];
@@ -32,8 +33,14 @@ export class JSONImportValidator implements ImportValidator {
       if (!data.tournament.system) errors.push('Відсутня система турніру');
     }
 
-    if (!data.players || !Array.isArray(data.players)) {
-      errors.push('Відсутній список гравців або невірний формат');
+    if (data.tournament?.format === 'team') {
+      if (!data.teams || !Array.isArray(data.teams)) {
+        errors.push('Відсутній список команд для командного турніру');
+      }
+    } else {
+      if (!data.players || !Array.isArray(data.players)) {
+        errors.push('Відсутній список гравців або невірний формат');
+      }
     }
 
     if (!data.matches || !Array.isArray(data.matches)) {
@@ -110,23 +117,28 @@ export class ImportService {
     importedData: ImportData,
     existingTournaments: Tournament[],
     existingPlayers: Player[],
+    existingTeams: Team[],
     existingMatches: Match[]
   ): Promise<{
     tournament: Tournament;
     newPlayers: Player[];
+    newTeams: Team[];
     newMatches: Match[];
   }> {
     const result = {
       tournament: importedData.tournament!,
       newPlayers: [] as Player[],
+      newTeams: [] as Team[],
       newMatches: [] as Match[],
     };
 
     result.tournament.id = this.generateNewId();
     result.tournament.status = 'draft';
     result.tournament.currentRound = 1;
+    result.tournament.teamParticipants = result.tournament.teamParticipants || [];
 
     const playerIdMap = new Map<string, string>();
+    const teamIdMap = new Map<string, string>();
 
     if (importedData.players) {
       for (const player of importedData.players) {
@@ -148,18 +160,50 @@ export class ImportService {
       }
     }
 
+    if (importedData.teams) {
+      for (const team of importedData.teams) {
+        const existingTeam = existingTeams.find(
+          t => t.name === team.name
+        );
+
+        if (existingTeam) {
+          teamIdMap.set(team.id, existingTeam.id);
+        } else {
+          const newTeamId = this.generateNewId();
+          teamIdMap.set(team.id, newTeamId);
+          result.newTeams.push({
+            ...team,
+            id: newTeamId,
+            players: team.players.map(p => ({
+              ...p,
+              playerId: playerIdMap.get(p.playerId) || p.playerId
+            })),
+            reserves: team.reserves.map(r => playerIdMap.get(r) || r)
+          });
+        }
+      }
+    }
+
     result.tournament.participants = result.tournament.participants.map(
       oldId => playerIdMap.get(oldId) || oldId
     );
 
+    if (result.tournament.teamParticipants) {
+      result.tournament.teamParticipants = result.tournament.teamParticipants.map(
+        oldId => teamIdMap.get(oldId) || oldId
+      );
+    }
+
     if (importedData.matches) {
+      const idMap = result.tournament.format === 'team' ? teamIdMap : playerIdMap;
+      
       for (const match of importedData.matches) {
         const newMatch: Match = {
           ...match,
           id: this.generateNewId(),
           tournamentId: result.tournament.id,
-          whiteId: match.whiteId ? playerIdMap.get(match.whiteId) || match.whiteId : null,
-          blackId: match.blackId ? playerIdMap.get(match.blackId) || match.blackId : null,
+          whiteId: match.whiteId ? idMap.get(match.whiteId) || match.whiteId : null,
+          blackId: match.blackId ? idMap.get(match.blackId) || match.blackId : null,
           result: null,
         };
         result.newMatches.push(newMatch);

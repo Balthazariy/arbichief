@@ -59,6 +59,7 @@ export default function TournamentsView() {
       startDate: formData.startDate,
       endDate: formData.endDate,
       participants: [],
+      teamParticipants: [],
       currentRound: 0,
       totalRounds,
       status: 'draft',
@@ -380,8 +381,14 @@ function TournamentCard({ tournament, onSelect, onDelete }: TournamentCardProps)
       <CardContent>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Учасників:</span>
-            <span className="font-medium">{tournament.participants.length}</span>
+            <span className="text-muted-foreground">
+              {tournament.format === 'team' ? 'Команд:' : 'Учасників:'}
+            </span>
+            <span className="font-medium">
+              {tournament.format === 'team'
+                ? (tournament.teamParticipants?.length || 0)
+                : tournament.participants.length}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Турів:</span>
