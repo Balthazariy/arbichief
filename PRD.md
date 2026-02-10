@@ -1,0 +1,166 @@
+# Planning Guide
+
+ArbiChief є веб-застосунком для організації та проведення шахових та шашкових турнірів, що автоматизує жеребкування, ведення турнірної таблиці, підрахунок очок та тай-брейків для спрощення роботи організаторів.
+
+**Experience Qualities**:
+1. **Professional** - Interface should inspire confidence with clear hierarchy, precise data presentation, and reliable functionality suitable for official tournament administration
+2. **Efficient** - Streamlined workflows that minimize clicks and cognitive load, enabling arbiters to manage tournaments quickly without unnecessary friction
+3. **Transparent** - Every calculation, pairing, and result should be immediately visible and understandable, with real-time updates to tournament standings
+
+**Complexity Level**: Complex Application (advanced functionality, likely with multiple views)
+This application requires sophisticated state management for tournament logic, multiple interconnected data entities (players, teams, tournaments, matches), complex calculations (tie-breaks, pairings), real-time table updates, and multiple report generation features.
+
+## Essential Features
+
+### Tournament Management
+- **Functionality**: Create, edit, view, and archive tournaments with configurable parameters (format, system, scoring rules, tie-breaks)
+- **Purpose**: Enables organizers to set up tournaments matching their specific requirements for chess or checkers competitions
+- **Trigger**: User clicks "Створити турнір" button from dashboard
+- **Progression**: Dashboard → New Tournament Form → Configure Format/System/Rules → Save → Tournament Detail View → Ready for Player Registration
+- **Success criteria**: Tournament is created with all parameters saved and appears in active tournaments list; can proceed to add players and generate pairings
+
+### Player Management
+- **Functionality**: Maintain database of players with profiles (name, surname, lastname, unique code, rating, gender)
+- **Purpose**: Centralizes player data for reuse across multiple tournaments and enables proper seeding based on ratings
+- **Trigger**: User navigates to "Гравці" section or adds player during tournament setup
+- **Progression**: Player List View → Add/Edit Player Form → Enter Details → Generate Unique Code → Save → Player Appears in Database
+- **Success criteria**: Player profiles persist across sessions, can be searched/filtered, and are available for tournament registration
+
+### Team Management
+- **Functionality**: Create teams, assign players to board positions and reserves, manage team compositions
+- **Purpose**: Supports team-based tournament formats where players compete as organized squads with specific board assignments
+- **Trigger**: User selects team format during tournament creation or navigates to "Команди" section
+- **Progression**: Team List → Create Team → Name Team → Assign Players to Boards → Set Reserves → Save → Team Available for Tournament
+- **Success criteria**: Teams maintain player assignments, enforce board rules, and calculate team scores correctly from individual board results
+
+### Pairing Generation (Жеребкування)
+- **Functionality**: Automatically generate match pairings for each round based on tournament system (Swiss, Round-robin)
+- **Purpose**: Eliminates manual pairing work and ensures fair matchups according to tournament rules
+- **Trigger**: Tournament organizer clicks "Генерувати тури" after player registration or after previous round results are entered
+- **Progression**: Tournament View → Select Round → Click Generate → System Calculates Pairings → Review Pairings → Confirm → Matches Created
+- **Success criteria**: Pairings avoid repeat matchups, balance colors in chess, respect Swiss system rules, and can be regenerated if needed before confirmation
+
+### Results Entry
+- **Functionality**: Record game results (win/loss/draw) for individual matches with automatic score calculation
+- **Purpose**: Captures match outcomes and immediately updates standings without manual calculation
+- **Trigger**: Arbiter clicks on match in current round to enter result
+- **Progression**: Round View → Select Match → Enter Result (1-0, 0-1, 0.5-0.5, Forfeit) → Confirm → Auto-update Standings
+- **Success criteria**: Results are saved immediately, standings recalculate with proper scoring, tie-breaks update automatically
+
+### Live Tournament Table
+- **Functionality**: Real-time display of current standings with points, tie-breaks, and ranking
+- **Purpose**: Provides instant visibility of tournament status for organizers, arbiters, and participants
+- **Trigger**: Automatically updates when results are entered; accessible via "Турнірна таблиця" tab
+- **Progression**: Any Result Entry → Automatic Recalculation → Table Refreshes → New Rankings Display
+- **Success criteria**: Table sorts correctly by points and tie-breaks, updates within 1 second of result entry, displays all relevant statistics
+
+### Reports and Export
+- **Functionality**: Generate and export tournament data in multiple formats (JSON, CSV) with final standings, crosstables, and player cards
+- **Purpose**: Creates archival records and shareable results for tournament documentation and publication
+- **Trigger**: User clicks "Експорт" button from tournament view
+- **Progression**: Tournament View → Export Menu → Select Format (JSON/CSV) → Choose Report Type → Generate → Download File
+- **Success criteria**: Exported files contain complete tournament data, are properly formatted, and can be imported to spreadsheet software
+
+## Edge Case Handling
+
+- **Late Registration** - Allow adding players to tournament before first round starts; prevent additions after pairings are confirmed
+- **Forfeit Handling** - Support recording forfeits and byes with proper point allocation (0 for forfeit loss, 1 for bye, 0.5 for double forfeit)
+- **Odd Player Count** - Automatically assign bye to lowest-rated unpaired player in Swiss system rounds
+- **Rating Ties** - When players have identical ratings, use registration order or random selection for initial seeding
+- **Empty States** - Display helpful prompts when no tournaments/players/teams exist yet with quick action buttons
+- **Invalid Results** - Prevent impossible results (both players winning) and require confirmation for unusual outcomes
+- **Data Persistence** - All data stored in browser using Spark KV storage, survives page refreshes and session closures
+
+## Design Direction
+
+The design should evoke a sense of authority, precision, and clarity—characteristics essential for official tournament administration. The interface should feel like a professional tool used in serious competitive environments, with visual language that communicates organization, fairness, and reliability. Colors should be bold yet dignified, typography sharp and readable at a glance, and interactions direct and purposeful.
+
+## Color Selection
+
+A rich, authoritative palette inspired by classic chess aesthetics with modern vibrancy. Deep strategic blues contrast against warm accent tones, creating visual hierarchy that guides tournament administrators through complex data efficiently.
+
+- **Primary Color**: Deep Strategic Blue (oklch(0.45 0.15 250)) - Represents authority, precision, and competitive intelligence; used for primary actions and navigation
+- **Secondary Colors**: Neutral Stone (oklch(0.92 0.01 90)) for backgrounds and Cool Slate (oklch(0.35 0.08 245)) for secondary elements; provides professional foundation without distraction
+- **Accent Color**: Amber Victory (oklch(0.75 0.18 75)) - Bright, warm highlight suggesting achievement and action; used for CTAs, active states, and important notifications
+- **Foreground/Background Pairings**: 
+  - Background (Stone White oklch(0.98 0.005 90)): Dark Blue text (oklch(0.25 0.1 250)) - Ratio 9.8:1 ✓
+  - Primary (Deep Blue oklch(0.45 0.15 250)): White text (oklch(1 0 0)) - Ratio 7.2:1 ✓
+  - Accent (Amber oklch(0.75 0.18 75)): Dark Blue text (oklch(0.25 0.1 250)) - Ratio 5.1:1 ✓
+  - Card (White oklch(1 0 0)): Foreground text (oklch(0.25 0.1 250)) - Ratio 11.5:1 ✓
+
+## Font Selection
+
+Typography should convey both technical precision and sporting elegance, balancing data density with readability during high-pressure tournament moments.
+
+- **Primary Font**: Space Grotesk (Bold for headings, Medium for UI) - Geometric, technical character with excellent legibility for data-heavy interfaces
+- **Secondary Font**: Inter (Regular for body, SemiBold for emphasis) - Neutral, highly readable for tables and dense information displays
+
+- **Typographic Hierarchy**:
+  - H1 (Page Titles): Space Grotesk Bold / 32px / -0.02em letter spacing / 1.1 line height
+  - H2 (Section Headers): Space Grotesk Bold / 24px / -0.01em letter spacing / 1.2 line height
+  - H3 (Card Titles): Space Grotesk Medium / 18px / 0em letter spacing / 1.3 line height
+  - Body Text: Inter Regular / 15px / 0em letter spacing / 1.6 line height
+  - Table Data: Inter Medium / 14px / 0.01em letter spacing / 1.4 line height
+  - Small Labels: Inter SemiBold / 12px / 0.03em letter spacing / 1.4 line height
+
+## Animations
+
+Animations should emphasize state changes and guide attention during critical tournament moments—results being entered, standings updating, pairings being generated—without slowing down rapid administrative workflows.
+
+- **Results Entry**: Subtle scale pulse (1.0 → 1.02 → 1.0) over 200ms when match result is saved, communicating confirmation
+- **Table Updates**: Smooth row position transitions (300ms ease-out) when standings reorder after results entry
+- **Navigation**: Quick fade-in (150ms) for view changes, maintaining context without delay
+- **Loading States**: Gentle rotation on pairing generation and report export to indicate processing
+- **Hover Feedback**: Instant background color shift (100ms) on interactive elements for immediate tactile response
+
+## Component Selection
+
+- **Components**:
+  - **Sidebar**: Navigation hub with collapsible sections for Tournaments, Players, Teams, Reports
+  - **Tabs**: Switch between tournament details, pairings, standings, and results within tournament view
+  - **Table**: Core component for displaying player lists, team rosters, standings, and match results with sortable columns
+  - **Dialog**: Modal forms for creating/editing tournaments, players, teams, and entering match results
+  - **Card**: Container for tournament overview, player profiles, and team compositions
+  - **Select**: Dropdown for tournament format, system selection, gender, and result options
+  - **Input**: Text fields for names, ratings, unique codes with clear validation states
+  - **Button**: Primary (Amber accent for main actions), Secondary (Blue for navigation), Destructive (Red for delete)
+  - **Badge**: Display player status, match results, round numbers with color-coded states
+  - **Separator**: Subtle dividers between sections maintaining visual organization
+  - **Sonner Toasts**: Quick success/error notifications for CRUD operations and result submissions
+
+- **Customizations**:
+  - **Crosstable Grid**: Custom component showing head-to-head results in matrix format for round-robin tournaments
+  - **Pairing Board**: Visual display of current round matches with drag-to-reorder capability (future enhancement)
+  - **Standing Table**: Enhanced table with automatic tie-break column visibility based on tournament settings
+
+- **States**:
+  - **Buttons**: Default (solid), Hover (brightness +10%), Active (scale 0.98), Disabled (opacity 40%)
+  - **Inputs**: Default (border-input), Focus (ring-2 ring-primary), Error (border-destructive), Success (border-green-500)
+  - **Match Cards**: Pending (border-muted), In Progress (border-accent), Completed (border-primary)
+
+- **Icon Selection**:
+  - Trophy (Tournament/Championship) for main tournament icon
+  - Users (Players) for player management
+  - UsersThree (Teams) for team section
+  - Shuffle (Pairing/жеребкування) for pairing generation
+  - Table (Standings) for tournament table view
+  - DownloadSimple (Export) for report generation
+  - Plus (Add) for create actions
+  - PencilSimple (Edit) for modification
+  - Trash (Delete) for removal operations
+  - CheckCircle (Win) for match results
+  - Circle (Draw) for draw results
+
+- **Spacing**:
+  - Page padding: p-6 (24px)
+  - Card padding: p-4 to p-6 (16-24px)
+  - Section gaps: gap-6 (24px)
+  - Form field gaps: gap-4 (16px)
+  - Table cell padding: px-4 py-2 (16px horizontal, 8px vertical)
+
+- **Mobile**:
+  - Sidebar collapses to bottom navigation bar on <768px
+  - Tables switch to card-based vertical layout on mobile
+  - Forms stack vertically with full-width inputs
+  - Tournament standings show condensed view with expandable details
+  - Match result entry uses full-screen dialog for better touch targets
