@@ -203,7 +203,7 @@ export default function CalendarView({ onNavigateToTournament }: CalendarViewPro
               <CardTitle className="text-xl">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </CardTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" data-tutorial="calendar-nav">
                 <Button
                   variant="outline"
                   size="sm"
@@ -228,7 +228,7 @@ export default function CalendarView({ onNavigateToTournament }: CalendarViewPro
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent data-tutorial="calendar-grid">
             <div className="grid grid-cols-7 gap-2">
               {weekDays.map((day) => (
                 <div
@@ -342,7 +342,7 @@ export default function CalendarView({ onNavigateToTournament }: CalendarViewPro
             </Card>
           )}
 
-          <Card>
+          <Card data-tutorial="upcoming-list">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Bell size={20} weight="bold" className="text-primary" />

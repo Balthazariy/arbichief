@@ -114,7 +114,7 @@ export default function TournamentsView() {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button className="bg-accent text-accent-foreground hover:brightness-110">
+            <Button className="bg-accent text-accent-foreground hover:brightness-110" data-tutorial="create-tournament">
               <Plus size={20} />
               Створити турнір
             </Button>
@@ -250,7 +250,7 @@ export default function TournamentsView() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="active" className="space-y-4">
+        <Tabs defaultValue="active" className="space-y-4" data-tutorial="tournament-filters">
           <TabsList>
             <TabsTrigger value="active">
               Активні ({activeTournaments.length})
@@ -274,13 +274,14 @@ export default function TournamentsView() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeTournaments.map((tournament) => (
-                  <TournamentCard
-                    key={tournament.id}
-                    tournament={tournament}
-                    onSelect={setSelectedTournament}
-                    onDelete={handleDeleteTournament}
-                  />
+                {activeTournaments.map((tournament, index) => (
+                  <div key={tournament.id} data-tutorial={index === 0 ? "tournament-card" : undefined}>
+                    <TournamentCard
+                      tournament={tournament}
+                      onSelect={setSelectedTournament}
+                      onDelete={handleDeleteTournament}
+                    />
+                  </div>
                 ))}
               </div>
             )}

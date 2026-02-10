@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { dataMigrationService } from '@/lib/migration';
 import { useTheme } from '@/hooks/use-theme';
 import { useReminders } from '@/hooks/use-reminders';
+import { useKV } from '@github/spark/hooks';
 import { Button } from '@/components/ui/button';
 import DashboardView from './components/DashboardView';
 import TournamentsView from './components/TournamentsView';
@@ -12,6 +13,8 @@ import PlayersView from './components/PlayersView';
 import TeamsView from './components/TeamsView';
 import ExportView from './components/ExportView';
 import CalendarView from './components/CalendarView';
+import { TutorialOverlay } from './components/TutorialOverlay';
+import { tutorialSteps } from './lib/tutorial';
 
 type View = 'dashboard' | 'tournaments' | 'players' | 'teams' | 'export' | 'calendar';
 
@@ -20,6 +23,10 @@ function App() {
   const [isMigrating, setIsMigrating] = useState(true);
   const { theme, toggleTheme } = useTheme();
   useReminders();
+  
+  const [tutorialCompleted, setTutorialCompleted] = useKV<boolean>('tutorial-completed', false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [currentTutorialStep, setCurrentTutorialStep] = useState(0);
 
   useEffect(() => {
     const runMigration = async () => {
@@ -34,6 +41,52 @@ function App() {
 
     runMigration();
   }, []);
+
+  useEffect(() => {
+    if (!isMigrating && !tutorialCompleted) {
+      const timer = setTimeout(() => {
+        setShowTutorial(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isMigrating, tutorialCompleted]);
+
+  useEffect(() => {
+    const currentStep = tutorialSteps[currentTutorialStep];
+    if (currentStep?.view && currentStep.view !== currentView) {
+      setCurrentView(currentStep.view);
+    }
+  }, [currentTutorialStep]);
+
+  const handleTutorialNext = () => {
+    if (currentTutorialStep < tutorialSteps.length - 1) {
+      setCurrentTutorialStep(currentTutorialStep + 1);
+    }
+  };
+
+  const handleTutorialPrevious = () => {
+    if (currentTutorialStep > 0) {
+      setCurrentTutorialStep(currentTutorialStep - 1);
+    }
+  };
+
+  const handleTutorialSkip = () => {
+    setShowTutorial(false);
+    setCurrentTutorialStep(0);
+    setTutorialCompleted((prev) => true);
+  };
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+    setCurrentTutorialStep(0);
+    setTutorialCompleted((prev) => true);
+  };
+
+  const startTutorial = () => {
+    setCurrentTutorialStep(0);
+    setShowTutorial(true);
+    setCurrentView('dashboard');
+  };
 
   if (isMigrating) {
     return (
@@ -58,7 +111,18 @@ function App() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
-      <header className="border-b border-border bg-card sticky top-0 z-40">
+      {showTutorial && (
+        <TutorialOverlay
+          step={tutorialSteps[currentTutorialStep]}
+          currentStepIndex={currentTutorialStep}
+          totalSteps={tutorialSteps.length}
+          onNext={handleTutorialNext}
+          onPrevious={handleTutorialPrevious}
+          onSkip={handleTutorialSkip}
+          onComplete={handleTutorialComplete}
+        />
+      )}
+      <header className="border-b border-border bg-card sticky top-0 z-40" data-tutorial="header">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -78,6 +142,7 @@ function App() {
               onClick={toggleTheme}
               className="rounded-lg"
               aria-label="Перемкнути тему"
+              data-tutorial="theme-toggle"
             >
               {theme === 'light' ? (
                 <Moon size={20} weight="regular" />
@@ -90,7 +155,7 @@ function App() {
       </header>
 
       <div className="flex">
-        <aside className="hidden md:block w-64 border-r border-border bg-card min-h-[calc(100vh-89px)] sticky top-[89px]">
+        <aside className="hidden md:block w-64 border-r border-border bg-card min-h-[calc(100vh-89px)] sticky top-[89px]" data-tutorial="navigation">
           <nav className="p-4 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon;
@@ -104,6 +169,7 @@ function App() {
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-foreground hover:bg-muted'
                   )}
+                  data-tutorial={`nav-${item.id}`}
                 >
                   <Icon size={20} weight={currentView === item.id ? 'fill' : 'regular'} />
                   {item.label}
@@ -114,7 +180,7 @@ function App() {
         </aside>
 
         <main className="flex-1 p-6">
-          {currentView === 'dashboard' && <DashboardView onNavigate={setCurrentView} />}
+          {currentView === 'dashboard' && <DashboardView onNavigate={setCurrentView} onStartTutorial={startTutorial} />}
           {currentView === 'tournaments' && <TournamentsView />}
           {currentView === 'players' && <PlayersView />}
           {currentView === 'teams' && <TeamsView />}
@@ -137,6 +203,7 @@ function App() {
                     ? 'text-primary'
                     : 'text-muted-foreground'
                 )}
+                data-tutorial={`nav-${item.id}`}
               >
                 <Icon size={24} weight={currentView === item.id ? 'fill' : 'regular'} />
                 <span className="text-xs font-semibold">{item.label}</span>

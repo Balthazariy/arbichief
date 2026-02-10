@@ -113,7 +113,7 @@ export default function PlayersView() {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button className="bg-accent text-accent-foreground hover:brightness-110">
+            <Button className="bg-accent text-accent-foreground hover:brightness-110" data-tutorial="add-player">
               <Plus size={20} />
               Додати гравця
             </Button>
@@ -199,7 +199,7 @@ export default function PlayersView() {
           <CardDescription>
             {(players || []).length} {(players || []).length === 1 ? 'гравець' : 'гравців'} у базі даних
           </CardDescription>
-          <div className="pt-4">
+          <div className="pt-4" data-tutorial="player-search">
             <div className="relative">
               <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
               <Input
@@ -211,7 +211,7 @@ export default function PlayersView() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent data-tutorial="player-table">
           {filteredPlayers.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">

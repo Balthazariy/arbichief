@@ -1,4 +1,4 @@
-import { Trophy, Users, UsersThree, Plus, Bell } from '@phosphor-icons/react';
+import { Trophy, Users, UsersThree, Plus, Bell, GraduationCap } from '@phosphor-icons/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { useKV } from '@github/spark/hooks';
@@ -7,9 +7,10 @@ import { Badge } from './ui/badge';
 
 interface DashboardViewProps {
   onNavigate: (view: 'tournaments' | 'players' | 'teams') => void;
+  onStartTutorial: () => void;
 }
 
-export default function DashboardView({ onNavigate }: DashboardViewProps) {
+export default function DashboardView({ onNavigate, onStartTutorial }: DashboardViewProps) {
   const [tournaments] = useKV<Tournament[]>('tournaments', []);
   const [players] = useKV<Player[]>('players', []);
   const [teams] = useKV<Team[]>('teams', []);
@@ -34,16 +35,26 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">
-          Панель керування
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          Огляд поточних турнірів та статистики
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            Панель керування
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Огляд поточних турнірів та статистики
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={onStartTutorial}
+          className="gap-2"
+        >
+          <GraduationCap size={20} />
+          Туторіал
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-tutorial="dashboard-stats">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground">
@@ -164,7 +175,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
       )}
 
       {upcomingReminders.length > 0 && (
-        <Card>
+        <Card data-tutorial="upcoming-reminders">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Bell size={24} weight="bold" className="text-accent" />

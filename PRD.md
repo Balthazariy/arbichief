@@ -82,6 +82,13 @@ This application requires sophisticated state management for tournament logic, m
 - **Progression**: Main Navigation → Select Calendar → View Current Month → Navigate Between Months (Previous/Next/Today) → Click Day with Reminders → View Day Details → See Upcoming Reminders List
 - **Success criteria**: Calendar displays correct month with days showing reminder indicators (dots), highlights current day, shows all reminders for selected day with tournament context, displays next 5 upcoming reminders sorted by date/time, supports month navigation, and updates in real-time when reminders are added/modified
 
+### Interactive Tutorial
+- **Functionality**: Step-by-step interactive tutorial overlay that guides users through all major features of the application, with highlighted UI elements and contextual tooltips
+- **Purpose**: Helps new users quickly understand and learn how to use all features of ArbiChief, reducing learning curve and improving user onboarding experience
+- **Trigger**: Automatically appears on first app load; can be manually started from "Туторіал" button on dashboard
+- **Progression**: Dashboard → Tutorial Button → Welcome Message → Guided Tour Through Each Section (Dashboard → Tournaments → Players → Teams → Calendar → Export) → Highlight Key Features → Interactive Tooltips → Navigation Between Steps → Completion
+- **Success criteria**: Tutorial automatically starts for new users, smoothly transitions between views, highlights relevant UI elements with pulsing borders, provides clear descriptions for each feature, allows navigation forward/backward through steps, can be skipped at any time, marks completion in persistent storage, and can be restarted from dashboard
+
 ## Edge Case Handling
 
 - **Late Registration** - Allow adding players to tournament before first round starts; prevent additions after pairings are confirmed
@@ -100,6 +107,9 @@ This application requires sophisticated state management for tournament logic, m
 - **Past Reminders** - Reminders in the past are still editable and toggleable but display "notified" badge if already triggered (for one-time) or "last notified" date (for recurring)
 - **Duplicate Reminders** - System allows multiple reminders for same tournament to support pre-event notifications at different times
 - **Recurring Reminders** - Recurring reminders automatically advance to next occurrence after triggering (daily +1 day, weekly +7 days, monthly +1 month), can be edited or disabled at any time, and won't trigger multiple times on same day
+- **Tutorial Navigation** - Tutorial automatically advances to correct view when step requires it, handles missing or optional elements gracefully
+- **Tutorial Restart** - Users can restart tutorial multiple times without issues, tutorial state resets properly between sessions
+- **Tutorial Skip** - Skipping tutorial marks it as completed to prevent auto-start on next visit
 
 ## Technical Architecture
 
@@ -232,6 +242,9 @@ Animations should emphasize state changes and guide attention during critical to
   - Circle (Draw) for draw results
   - Moon (Dark theme) for dark mode toggle
   - Sun (Light theme) for light mode toggle
+  - GraduationCap (Tutorial) for tutorial button
+  - ArrowLeft/ArrowRight (Navigation) for tutorial navigation
+  - X (Close) for dismissing tutorial
 
 - **Spacing**:
   - Page padding: p-6 (24px)

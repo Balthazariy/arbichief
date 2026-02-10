@@ -85,7 +85,7 @@ export default function TeamsView() {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button className="bg-accent text-accent-foreground hover:brightness-110">
+            <Button className="bg-accent text-accent-foreground hover:brightness-110" data-tutorial="create-team">
               <Plus size={20} />
               Створити команду
             </Button>
@@ -136,8 +136,8 @@ export default function TeamsView() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(teams || []).map((team) => (
-                <Card key={team.id}>
+              {(teams || []).map((team, index) => (
+                <Card key={team.id} data-tutorial={index === 0 ? "team-card" : undefined}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
