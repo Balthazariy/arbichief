@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Bell, Plus, Trash, CalendarBlank, Clock, PencilSimple } from '@phosphor-icons/react';
+import { Bell, Plus, Trash, CalendarBlank, Clock, PencilSimple, Repeat } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
-import { Tournament, Reminder } from '@/lib/types';
+import { Tournament, Reminder, RecurrenceType } from '@/lib/types';
 import { generateId } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +26,7 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
     reminderDate: tournament.startDate,
     reminderTime: '09:00',
     message: `Нагадування: турнір "${tournament.name}" розпочинається сьогодні!`,
+    recurrence: 'none' as RecurrenceType,
   });
 
   const tournamentReminders = (reminders || []).filter(
@@ -37,6 +38,7 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
       reminderDate: tournament.startDate,
       reminderTime: '09:00',
       message: `Нагадування: турнір "${tournament.name}" розпочинається сьогодні!`,
+      recurrence: 'none',
     });
     setEditingReminder(null);
   };
@@ -47,6 +49,7 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
       reminderDate: reminder.reminderDate,
       reminderTime: reminder.reminderTime,
       message: reminder.message,
+      recurrence: reminder.recurrence,
     });
     setDialogOpen(true);
   };
@@ -71,7 +74,9 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
                 reminderDate: formData.reminderDate,
                 reminderTime: formData.reminderTime,
                 message: formData.message,
+                recurrence: formData.recurrence,
                 notified: false,
+                lastNotified: undefined,
               }
             : r
         )
@@ -84,6 +89,7 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
         reminderDate: formData.reminderDate,
         reminderTime: formData.reminderTime,
         message: formData.message,
+        recurrence: formData.recurrence,
         isEnabled: true,
         notified: false,
       };
@@ -115,6 +121,20 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
       month: 'long',
       year: 'numeric',
     });
+  };
+
+  const getRecurrenceLabel = (recurrence: RecurrenceType) => {
+    switch (recurrence) {
+      case 'daily':
+        return 'Щодня';
+      case 'weekly':
+        return 'Щотижня';
+      case 'monthly':
+        return 'Щомісяця';
+      case 'none':
+      default:
+        return 'Одноразово';
+    }
   };
 
   return (
@@ -194,6 +214,37 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="recurrence">Повторення</Label>
+                  <div className="relative">
+                    <Repeat
+                      size={18}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10"
+                    />
+                    <Select
+                      value={formData.recurrence}
+                      onValueChange={(value: RecurrenceType) =>
+                        setFormData({ ...formData, recurrence: value })
+                      }
+                    >
+                      <SelectTrigger id="recurrence" className="pl-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Одноразово</SelectItem>
+                        <SelectItem value="daily">Щодня</SelectItem>
+                        <SelectItem value="weekly">Щотижня</SelectItem>
+                        <SelectItem value="monthly">Щомісяця</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {formData.recurrence !== 'none' && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Нагадування буде повторюватись автоматично після кожного спрацювання
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="message">Повідомлення</Label>
                   <Input
                     id="message"
@@ -254,7 +305,7 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
                   >
                     {reminder.message}
                   </p>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                     <div className="flex items-center gap-1">
                       <CalendarBlank size={14} />
                       {formatDate(reminder.reminderDate)}
@@ -263,9 +314,20 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
                       <Clock size={14} />
                       {reminder.reminderTime}
                     </div>
-                    {reminder.notified && (
+                    {reminder.recurrence !== 'none' && (
+                      <Badge variant="outline" className="text-xs flex items-center gap-1">
+                        <Repeat size={12} />
+                        {getRecurrenceLabel(reminder.recurrence)}
+                      </Badge>
+                    )}
+                    {reminder.notified && reminder.recurrence === 'none' && (
                       <Badge variant="secondary" className="text-xs">
                         Відправлено
+                      </Badge>
+                    )}
+                    {reminder.lastNotified && reminder.recurrence !== 'none' && (
+                      <Badge variant="secondary" className="text-xs">
+                        Останнє: {new Date(reminder.lastNotified).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
                       </Badge>
                     )}
                   </div>
@@ -277,7 +339,7 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
                     size="icon"
                     onClick={() => handleOpenEdit(reminder)}
                     className="text-primary hover:text-primary"
-                    disabled={reminder.notified}
+                    disabled={reminder.notified && reminder.recurrence === 'none'}
                   >
                     <PencilSimple size={18} />
                   </Button>

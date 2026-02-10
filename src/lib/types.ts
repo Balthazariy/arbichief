@@ -62,6 +62,8 @@ export interface Standing {
   progressive?: number;
 }
 
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
+
 export interface Reminder {
   id: string;
   tournamentId: string;
@@ -70,4 +72,6 @@ export interface Reminder {
   message: string;
   isEnabled: boolean;
   notified: boolean;
+  recurrence: RecurrenceType;
+  lastNotified?: string;
 }

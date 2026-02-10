@@ -69,11 +69,11 @@ This application requires sophisticated state management for tournament logic, m
 - **Success criteria**: Theme applies immediately across all views, persists between sessions, and provides appropriate contrast in both modes
 
 ### Tournament Reminders
-- **Functionality**: Create, manage, and receive reminders for tournaments with customizable date, time, and message
-- **Purpose**: Helps organizers remember important tournament dates and events without relying on external calendar apps
+- **Functionality**: Create, manage, and receive reminders for tournaments with customizable date, time, message, and recurrence patterns (daily, weekly, monthly)
+- **Purpose**: Helps organizers remember important tournament dates and recurring events without relying on external calendar apps
 - **Trigger**: User navigates to "Нагадування" tab in tournament detail view and clicks "Додати нагадування"
-- **Progression**: Tournament Detail → Reminders Tab → Add Reminder → Set Date/Time → Enter Message → Enable/Disable Toggle → Save → Automatic Notification at Scheduled Time
-- **Success criteria**: Reminders display as toast notifications at scheduled time, can be toggled on/off without deletion, persist between sessions, show on dashboard with upcoming events, and mark as notified after display
+- **Progression**: Tournament Detail → Reminders Tab → Add Reminder → Set Date/Time → Select Recurrence (None/Daily/Weekly/Monthly) → Enter Message → Enable/Disable Toggle → Save → Automatic Notification at Scheduled Time → For Recurring: Auto-reschedule Next Occurrence
+- **Success criteria**: Reminders display as toast notifications at scheduled time, can be toggled on/off without deletion, persist between sessions, show on dashboard with upcoming events. One-time reminders mark as notified after display. Recurring reminders automatically update to next occurrence (next day/week/month) after each notification and display last notification date.
 
 ## Edge Case Handling
 
@@ -87,8 +87,9 @@ This application requires sophisticated state management for tournament logic, m
 - **Database Migration** - Legacy useKV data automatically migrated to IndexedDB on first load
 - **Offline Support** - Full functionality available offline as a Progressive Web App
 - **Theme Persistence** - User theme preference (light/dark) stored in useKV and automatically restored on app load
-- **Past Reminders** - Reminders in the past are still editable and toggleable but display "notified" badge if already triggered
+- **Past Reminders** - Reminders in the past are still editable and toggleable but display "notified" badge if already triggered (for one-time) or "last notified" date (for recurring)
 - **Duplicate Reminders** - System allows multiple reminders for same tournament to support pre-event notifications at different times
+- **Recurring Reminders** - Recurring reminders automatically advance to next occurrence after triggering (daily +1 day, weekly +7 days, monthly +1 month), can be edited or disabled at any time, and won't trigger multiple times on same day
 
 ## Technical Architecture
 
