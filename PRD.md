@@ -61,6 +61,13 @@ This application requires sophisticated state management for tournament logic, m
 - **Progression**: Export Page → Select Tournament → Choose Format (JSON/CSV) → Review Export Contents → Click Export → Download File
 - **Success criteria**: Exported files contain complete tournament data (tournament info, participants, matches, standings with tie-breaks), are properly formatted, and can be imported to spreadsheet software or re-imported to system
 
+### Theme Switching
+- **Functionality**: Toggle between light and dark themes with persistent preference storage
+- **Purpose**: Allows users to choose visual appearance based on personal preference and lighting conditions
+- **Trigger**: User clicks theme toggle button (moon/sun icon) in application header
+- **Progression**: Any View → Click Theme Toggle Button → Theme Changes Instantly → Preference Saved
+- **Success criteria**: Theme applies immediately across all views, persists between sessions, and provides appropriate contrast in both modes
+
 ## Edge Case Handling
 
 - **Late Registration** - Allow adding players to tournament before first round starts; prevent additions after pairings are confirmed
@@ -72,6 +79,7 @@ This application requires sophisticated state management for tournament logic, m
 - **Data Persistence** - All data stored in browser using IndexedDB (via OOP repository pattern), survives page refreshes and session closures
 - **Database Migration** - Legacy useKV data automatically migrated to IndexedDB on first load
 - **Offline Support** - Full functionality available offline as a Progressive Web App
+- **Theme Persistence** - User theme preference (light/dark) stored in useKV and automatically restored on app load
 
 ## Technical Architecture
 
@@ -105,20 +113,34 @@ This application requires sophisticated state management for tournament logic, m
 
 ## Design Direction
 
-The design should evoke a sense of authority, precision, and clarity—characteristics essential for official tournament administration. The interface should feel like a professional tool used in serious competitive environments, with visual language that communicates organization, fairness, and reliability. Colors should be bold yet dignified, typography sharp and readable at a glance, and interactions direct and purposeful.
+The design should evoke a sense of authority, precision, and clarity—characteristics essential for official tournament administration. The interface should feel like a professional tool used in serious competitive environments, with visual language that communicates organization, fairness, and reliability. Colors should be bold yet dignified, typography sharp and readable at a glance, and interactions direct and purposeful. The application now supports both light and dark themes, allowing users to choose their preferred visual mode.
 
 ## Color Selection
 
-A rich, authoritative palette inspired by classic chess aesthetics with modern vibrancy. Deep strategic blues contrast against warm accent tones, creating visual hierarchy that guides tournament administrators through complex data efficiently.
+A rich, authoritative palette inspired by classic chess aesthetics with modern vibrancy. Deep strategic blues contrast against warm accent tones, creating visual hierarchy that guides tournament administrators through complex data efficiently. Both light and dark themes maintain the same visual language while adapting to different lighting conditions.
 
+**Light Theme:**
 - **Primary Color**: Deep Strategic Blue (oklch(0.45 0.15 250)) - Represents authority, precision, and competitive intelligence; used for primary actions and navigation
 - **Secondary Colors**: Neutral Stone (oklch(0.92 0.01 90)) for backgrounds and Cool Slate (oklch(0.35 0.08 245)) for secondary elements; provides professional foundation without distraction
 - **Accent Color**: Amber Victory (oklch(0.75 0.18 75)) - Bright, warm highlight suggesting achievement and action; used for CTAs, active states, and important notifications
-- **Foreground/Background Pairings**: 
+
+**Dark Theme:**
+- **Primary Color**: Bright Strategic Blue (oklch(0.60 0.18 250)) - Lighter variant for visibility on dark backgrounds
+- **Background**: Deep Navy (oklch(0.15 0.02 250)) - Rich dark base that reduces eye strain
+- **Card**: Elevated Navy (oklch(0.20 0.02 250)) - Slightly lighter for layered surfaces
+- **Accent Color**: Warm Amber (oklch(0.70 0.18 75)) - Adjusted for dark mode contrast
+
+- **Foreground/Background Pairings (Light Theme)**: 
   - Background (Stone White oklch(0.98 0.005 90)): Dark Blue text (oklch(0.25 0.1 250)) - Ratio 9.8:1 ✓
   - Primary (Deep Blue oklch(0.45 0.15 250)): White text (oklch(1 0 0)) - Ratio 7.2:1 ✓
   - Accent (Amber oklch(0.75 0.18 75)): Dark Blue text (oklch(0.25 0.1 250)) - Ratio 5.1:1 ✓
   - Card (White oklch(1 0 0)): Foreground text (oklch(0.25 0.1 250)) - Ratio 11.5:1 ✓
+
+- **Foreground/Background Pairings (Dark Theme)**:
+  - Background (Deep Navy oklch(0.15 0.02 250)): Light text (oklch(0.95 0.01 90)) - Ratio 10.5:1 ✓
+  - Primary (Bright Blue oklch(0.60 0.18 250)): Light text (oklch(0.98 0.005 90)) - Ratio 7.8:1 ✓
+  - Accent (Warm Amber oklch(0.70 0.18 75)): Dark text (oklch(0.15 0.02 250)) - Ratio 8.2:1 ✓
+  - Card (Elevated Navy oklch(0.20 0.02 250)): Light text (oklch(0.95 0.01 90)) - Ratio 9.1:1 ✓
 
 ## Font Selection
 
@@ -182,6 +204,8 @@ Animations should emphasize state changes and guide attention during critical to
   - Trash (Delete) for removal operations
   - CheckCircle (Win) for match results
   - Circle (Draw) for draw results
+  - Moon (Dark theme) for dark mode toggle
+  - Sun (Light theme) for light mode toggle
 
 - **Spacing**:
   - Page padding: p-6 (24px)

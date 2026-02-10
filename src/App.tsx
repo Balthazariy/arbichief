@@ -1,8 +1,10 @@
-import { Trophy, Users, UsersThree, Table, DownloadSimple } from '@phosphor-icons/react';
+import { Trophy, Users, UsersThree, Table, DownloadSimple, Moon, Sun } from '@phosphor-icons/react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
 import { dataMigrationService } from '@/lib/migration';
+import { useTheme } from '@/hooks/use-theme';
+import { Button } from '@/components/ui/button';
 import DashboardView from './components/DashboardView';
 import TournamentsView from './components/TournamentsView';
 import PlayersView from './components/PlayersView';
@@ -14,6 +16,7 @@ type View = 'dashboard' | 'tournaments' | 'players' | 'teams' | 'export';
 function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isMigrating, setIsMigrating] = useState(true);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const runMigration = async () => {
@@ -53,16 +56,31 @@ function App() {
       <Toaster />
       <header className="border-b border-border bg-card sticky top-0 z-40">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Trophy size={32} weight="bold" className="text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                ArbiChief
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Менеджер шахових та шашкових турнірів
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Trophy size={32} weight="bold" className="text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  ArbiChief
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Менеджер шахових та шашкових турнірів
+                </p>
+              </div>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-lg"
+              aria-label="Перемкнути тему"
+            >
+              {theme === 'light' ? (
+                <Moon size={20} weight="regular" />
+              ) : (
+                <Sun size={20} weight="regular" />
+              )}
+            </Button>
           </div>
         </div>
       </header>
