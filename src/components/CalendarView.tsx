@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { CalendarBlank, CaretLeft, CaretRight, Clock, Bell, Trophy, Repeat } from '@phosphor-icons/react';
+import { CalendarBlank, CaretLeft, CaretRight, Clock, Bell, Trophy, Repeat, ArrowRight } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { Reminder, Tournament } from '@/lib/types';
 import { useDatabase } from '@/hooks/use-database';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import TournamentDetail from './TournamentDetail';
 
 interface CalendarDay {
   date: Date;
@@ -16,11 +17,16 @@ interface CalendarDay {
   reminders: (Reminder & { tournament?: Tournament })[];
 }
 
-export default function CalendarView() {
+interface CalendarViewProps {
+  onNavigateToTournament?: (tournament: Tournament) => void;
+}
+
+export default function CalendarView({ onNavigateToTournament }: CalendarViewProps = {}) {
   const [reminders] = useKV<Reminder[]>('reminders', []);
-  const { data: tournaments } = useDatabase<Tournament>('tournaments');
+  const [tournaments, setTournaments] = useKV<Tournament[]>('tournaments', []);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+  const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
 
   const monthNames = [
     'Січень', 'Лютий', 'Березень', 'Квітень', 'Травень', 'Червень',
@@ -86,7 +92,7 @@ export default function CalendarView() {
       
       day.reminders = dayReminders.map((reminder) => ({
         ...reminder,
-        tournament: tournaments.find((t) => t.id === reminder.tournamentId),
+        tournament: (tournaments || []).find((t) => t.id === reminder.tournamentId),
       }));
     });
     
@@ -149,9 +155,32 @@ export default function CalendarView() {
       .slice(0, 5)
       .map((reminder) => ({
         ...reminder,
-        tournament: tournaments.find((t) => t.id === reminder.tournamentId),
+        tournament: (tournaments || []).find((t) => t.id === reminder.tournamentId),
       }));
   }, [reminders, tournaments]);
+
+  const handleOpenTournament = (tournament: Tournament) => {
+    if (onNavigateToTournament) {
+      onNavigateToTournament(tournament);
+    } else {
+      setSelectedTournament(tournament);
+    }
+  };
+
+  if (selectedTournament) {
+    return (
+      <TournamentDetail
+        tournament={selectedTournament}
+        onBack={() => setSelectedTournament(null)}
+        onUpdate={(updated) => {
+          setTournaments((current) =>
+            (current || []).map((t) => (t.id === updated.id ? updated : t))
+          );
+          setSelectedTournament(updated);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -291,6 +320,21 @@ export default function CalendarView() {
                           </div>
                         </div>
                       </div>
+                      {reminder.tournament && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenTournament(reminder.tournament!);
+                          }}
+                        >
+                          <Trophy size={14} />
+                          Відкрити турнір
+                          <ArrowRight size={14} />
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -373,6 +417,21 @@ export default function CalendarView() {
                             </div>
                           </div>
                         </div>
+                        {reminder.tournament && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full mt-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenTournament(reminder.tournament!);
+                            }}
+                          >
+                            <Trophy size={14} />
+                            Відкрити турнір
+                            <ArrowRight size={14} />
+                          </Button>
+                        )}
                       </div>
                     );
                   })}
