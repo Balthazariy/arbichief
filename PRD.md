@@ -1,6 +1,6 @@
 # Planning Guide
 
-ArbiChief є веб-застосунком для організації та проведення шахових та шашкових турнірів, що автоматизує жеребкування, ведення турнірної таблиці, підрахунок очок та тай-брейків для спрощення роботи організаторів.
+ArbiChief є кроссплатформним веб-застосунком (Progressive Web App) для організації та проведення шахових та шашкових турнірів, що автоматизує жеребкування, ведення турнірної таблиці, підрахунок очок та тай-брейків для спрощення роботи організаторів. Застосунок побудовано на React з TypeScript з використанням IndexedDB для локального зберігання даних та ООП архітектури з композицією замість наслідування.
 
 **Experience Qualities**:
 1. **Professional** - Interface should inspire confidence with clear hierarchy, precise data presentation, and reliable functionality suitable for official tournament administration
@@ -69,7 +69,39 @@ This application requires sophisticated state management for tournament logic, m
 - **Rating Ties** - When players have identical ratings, use registration order or random selection for initial seeding
 - **Empty States** - Display helpful prompts when no tournaments/players/teams exist yet with quick action buttons
 - **Invalid Results** - Prevent impossible results (both players winning) and require confirmation for unusual outcomes
-- **Data Persistence** - All data stored in browser using Spark KV storage, survives page refreshes and session closures
+- **Data Persistence** - All data stored in browser using IndexedDB (via OOP repository pattern), survives page refreshes and session closures
+- **Database Migration** - Legacy useKV data automatically migrated to IndexedDB on first load
+- **Offline Support** - Full functionality available offline as a Progressive Web App
+
+## Technical Architecture
+
+**OOP Design Principles:**
+- **Composition over Inheritance** - Services compose smaller classes (PointsCalculator, TieBreakCalculator) rather than deep inheritance hierarchies
+- **Small Focused Classes** - Each class has single responsibility (PlayerRepository, MatchRepository, etc.)
+- **Strategy Pattern** - Pairing algorithms (Swiss, Round-Robin) implement PairingStrategy interface
+- **Repository Pattern** - Database access abstracted through repositories (BaseRepository, PlayerRepository, etc.)
+- **Service Layer** - Business logic separated into services (StandingsService, PairingService, ExportService)
+
+**Database Layer (IndexedDB):**
+- **DatabaseConnection** - Manages IndexedDB connection lifecycle
+- **BaseRepository<T>** - Generic CRUD operations for all entities
+- **PlayerRepository** - Player-specific queries (findByUniqCode, findBySurname, search)
+- **TeamRepository** - Team-specific queries (findByPlayerId, isPlayerInTeam)
+- **TournamentRepository** - Tournament-specific queries (findByStatus, findByDateRange)
+- **MatchRepository** - Match-specific queries (findByTournamentId, findByRound)
+- **DatabaseManager** - Facade providing unified access to all repositories
+
+**Service Layer:**
+- **PointsCalculator** - Calculates individual match points
+- **StandingsCalculator** - Computes tournament standings from matches
+- **TieBreakCalculator** - Calculates Buchholz, Berger, Progressive tie-breaks
+- **TieBreakService** - Enriches standings with tie-break data
+- **PairingService** - Generates match pairings using strategy pattern
+- **SwissPairingStrategy** - Swiss system pairing algorithm
+- **RoundRobinPairingStrategy** - Round-robin pairing algorithm
+- **ExportService** - Exports tournament data using format pattern
+- **JSONExportFormat** - JSON export implementation
+- **CSVExportFormat** - CSV export implementation
 
 ## Design Direction
 

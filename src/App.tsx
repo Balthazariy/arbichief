@@ -1,7 +1,8 @@
 import { Trophy, Users, UsersThree, Table } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
+import { dataMigrationService } from '@/lib/migration';
 import DashboardView from './components/DashboardView';
 import TournamentsView from './components/TournamentsView';
 import PlayersView from './components/PlayersView';
@@ -11,6 +12,32 @@ type View = 'dashboard' | 'tournaments' | 'players' | 'teams';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [isMigrating, setIsMigrating] = useState(true);
+
+  useEffect(() => {
+    const runMigration = async () => {
+      try {
+        await dataMigrationService.migrateFromKV();
+      } catch (error) {
+        console.error('Migration failed:', error);
+      } finally {
+        setIsMigrating(false);
+      }
+    };
+
+    runMigration();
+  }, []);
+
+  if (isMigrating) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Trophy size={48} className="text-primary mx-auto mb-4 animate-pulse" />
+          <p className="text-muted-foreground">Завантаження ArbiChief...</p>
+        </div>
+      </div>
+    );
+  }
 
   const navigation = [
     { id: 'dashboard' as const, label: 'Панель керування', icon: Table },
