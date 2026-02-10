@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Plus, Trash, CalendarBlank, Clock } from '@phosphor-icons/react';
+import { Bell, Plus, Trash, CalendarBlank, Clock, PencilSimple } from '@phosphor-icons/react';
 import { useKV } from '@github/spark/hooks';
 import { Tournament, Reminder } from '@/lib/types';
 import { generateId } from '@/lib/helpers';
@@ -21,6 +21,7 @@ interface ReminderManagerProps {
 export default function ReminderManager({ tournament }: ReminderManagerProps) {
   const [reminders, setReminders] = useKV<Reminder[]>('reminders', []);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [formData, setFormData] = useState({
     reminderDate: tournament.startDate,
     reminderTime: '09:00',
@@ -37,6 +38,17 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
       reminderTime: '09:00',
       message: `Нагадування: турнір "${tournament.name}" розпочинається сьогодні!`,
     });
+    setEditingReminder(null);
+  };
+
+  const handleOpenEdit = (reminder: Reminder) => {
+    setEditingReminder(reminder);
+    setFormData({
+      reminderDate: reminder.reminderDate,
+      reminderTime: reminder.reminderTime,
+      message: reminder.message,
+    });
+    setDialogOpen(true);
   };
 
   const handleSave = () => {
@@ -50,18 +62,36 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
       return;
     }
 
-    const newReminder: Reminder = {
-      id: generateId(),
-      tournamentId: tournament.id,
-      reminderDate: formData.reminderDate,
-      reminderTime: formData.reminderTime,
-      message: formData.message,
-      isEnabled: true,
-      notified: false,
-    };
+    if (editingReminder) {
+      setReminders((current) =>
+        (current || []).map((r) =>
+          r.id === editingReminder.id
+            ? {
+                ...r,
+                reminderDate: formData.reminderDate,
+                reminderTime: formData.reminderTime,
+                message: formData.message,
+                notified: false,
+              }
+            : r
+        )
+      );
+      toast.success('Нагадування оновлено');
+    } else {
+      const newReminder: Reminder = {
+        id: generateId(),
+        tournamentId: tournament.id,
+        reminderDate: formData.reminderDate,
+        reminderTime: formData.reminderTime,
+        message: formData.message,
+        isEnabled: true,
+        notified: false,
+      };
 
-    setReminders((current) => [...(current || []), newReminder]);
-    toast.success('Нагадування створено');
+      setReminders((current) => [...(current || []), newReminder]);
+      toast.success('Нагадування створено');
+    }
+
     setDialogOpen(false);
     resetForm();
   };
@@ -100,7 +130,12 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
               </CardDescription>
             </div>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              resetForm();
+            }
+          }}>
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus size={16} weight="bold" className="mr-2" />
@@ -109,9 +144,13 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Нове нагадування</DialogTitle>
+                <DialogTitle>
+                  {editingReminder ? 'Редагувати нагадування' : 'Нове нагадування'}
+                </DialogTitle>
                 <DialogDescription>
-                  Створіть нагадування про турнір
+                  {editingReminder
+                    ? 'Змініть деталі нагадування про турнір'
+                    : 'Створіть нагадування про турнір'}
                 </DialogDescription>
               </DialogHeader>
 
@@ -233,6 +272,15 @@ export default function ReminderManager({ tournament }: ReminderManagerProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleOpenEdit(reminder)}
+                    className="text-primary hover:text-primary"
+                    disabled={reminder.notified}
+                  >
+                    <PencilSimple size={18} />
+                  </Button>
                   <Switch
                     checked={reminder.isEnabled}
                     onCheckedChange={() => handleToggle(reminder.id)}
