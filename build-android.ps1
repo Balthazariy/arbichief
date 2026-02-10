@@ -36,11 +36,11 @@ cd android
 
 if ($BuildType -eq "release") {
     .\gradlew.bat assembleRelease
-    $apkPath = ".\app\build\outputs\apk\release\app-release.apk"
+    $apkPath = "app\build\outputs\apk\release\app-release.apk"
     $outputName = "ArbiChief-release.apk"
 } else {
     .\gradlew.bat assembleDebug
-    $apkPath = ".\app\build\outputs\apk\debug\app-debug.apk"
+    $apkPath = "app\build\outputs\apk\debug\app-debug.apk"
     $outputName = "ArbiChief-debug.apk"
 }
 
