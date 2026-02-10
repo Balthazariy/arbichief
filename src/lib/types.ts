@@ -61,3 +61,13 @@ export interface Standing {
   berger?: number;
   progressive?: number;
 }
+
+export interface Reminder {
+  id: string;
+  tournamentId: string;
+  reminderDate: string;
+  reminderTime: string;
+  message: string;
+  isEnabled: boolean;
+  notified: boolean;
+}

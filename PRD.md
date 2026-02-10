@@ -68,6 +68,13 @@ This application requires sophisticated state management for tournament logic, m
 - **Progression**: Any View → Click Theme Toggle Button → Theme Changes Instantly → Preference Saved
 - **Success criteria**: Theme applies immediately across all views, persists between sessions, and provides appropriate contrast in both modes
 
+### Tournament Reminders
+- **Functionality**: Create, manage, and receive reminders for tournaments with customizable date, time, and message
+- **Purpose**: Helps organizers remember important tournament dates and events without relying on external calendar apps
+- **Trigger**: User navigates to "Нагадування" tab in tournament detail view and clicks "Додати нагадування"
+- **Progression**: Tournament Detail → Reminders Tab → Add Reminder → Set Date/Time → Enter Message → Enable/Disable Toggle → Save → Automatic Notification at Scheduled Time
+- **Success criteria**: Reminders display as toast notifications at scheduled time, can be toggled on/off without deletion, persist between sessions, show on dashboard with upcoming events, and mark as notified after display
+
 ## Edge Case Handling
 
 - **Late Registration** - Allow adding players to tournament before first round starts; prevent additions after pairings are confirmed
@@ -80,6 +87,8 @@ This application requires sophisticated state management for tournament logic, m
 - **Database Migration** - Legacy useKV data automatically migrated to IndexedDB on first load
 - **Offline Support** - Full functionality available offline as a Progressive Web App
 - **Theme Persistence** - User theme preference (light/dark) stored in useKV and automatically restored on app load
+- **Past Reminders** - Reminders in the past are still editable and toggleable but display "notified" badge if already triggered
+- **Duplicate Reminders** - System allows multiple reminders for same tournament to support pre-event notifications at different times
 
 ## Technical Architecture
 

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
+import ReminderManager from './ReminderManager';
 
 interface TournamentDetailProps {
   tournament: Tournament;
@@ -209,6 +210,7 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
           <TabsTrigger value="participants">Учасники</TabsTrigger>
           <TabsTrigger value="pairings">Пари</TabsTrigger>
           <TabsTrigger value="standings">Таблиця</TabsTrigger>
+          <TabsTrigger value="reminders">Нагадування</TabsTrigger>
           <TabsTrigger value="export">Експорт</TabsTrigger>
         </TabsList>
 
@@ -417,6 +419,10 @@ export default function TournamentDetail({ tournament, onBack, onUpdate }: Tourn
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="reminders">
+          <ReminderManager tournament={tournament} />
         </TabsContent>
 
         <TabsContent value="export">

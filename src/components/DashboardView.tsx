@@ -1,8 +1,9 @@
-import { Trophy, Users, UsersThree, Plus } from '@phosphor-icons/react';
+import { Trophy, Users, UsersThree, Plus, Bell } from '@phosphor-icons/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { useKV } from '@github/spark/hooks';
-import { Tournament, Player, Team } from '@/lib/types';
+import { Tournament, Player, Team, Reminder } from '@/lib/types';
+import { Badge } from './ui/badge';
 
 interface DashboardViewProps {
   onNavigate: (view: 'tournaments' | 'players' | 'teams') => void;
@@ -12,9 +13,24 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
   const [tournaments] = useKV<Tournament[]>('tournaments', []);
   const [players] = useKV<Player[]>('players', []);
   const [teams] = useKV<Team[]>('teams', []);
+  const [reminders] = useKV<Reminder[]>('reminders', []);
 
   const activeTournaments = (tournaments || []).filter(t => t.status === 'active');
   const completedTournaments = (tournaments || []).filter(t => t.status === 'completed');
+
+  const upcomingReminders = (reminders || [])
+    .filter(r => r.isEnabled && !r.notified)
+    .sort((a, b) => {
+      const dateA = new Date(`${a.reminderDate}T${a.reminderTime}`);
+      const dateB = new Date(`${b.reminderDate}T${b.reminderTime}`);
+      return dateA.getTime() - dateB.getTime();
+    })
+    .slice(0, 3);
+
+  const getTournamentName = (tournamentId: string) => {
+    const tournament = (tournaments || []).find(t => t.id === tournamentId);
+    return tournament?.name || 'Невідомий турнір';
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -139,6 +155,51 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
                     <p className="text-xs text-muted-foreground">
                       {tournament.gameType === 'chess' ? 'Шахи' : 'Шашки'}
                     </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {upcomingReminders.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Bell size={24} weight="bold" className="text-accent" />
+              <div>
+                <CardTitle>Найближчі нагадування</CardTitle>
+                <CardDescription>Заплановані події</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {upcomingReminders.map((reminder) => (
+                <div
+                  key={reminder.id}
+                  className="flex items-start gap-3 p-3 border border-border rounded-lg bg-accent/5"
+                >
+                  <Bell size={20} className="text-accent mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground text-sm">
+                      {reminder.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {getTournamentName(reminder.tournamentId)}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {new Date(reminder.reminderDate).toLocaleDateString('uk-UA', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {reminder.reminderTime}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               ))}

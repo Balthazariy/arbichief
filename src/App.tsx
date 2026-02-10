@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
 import { dataMigrationService } from '@/lib/migration';
 import { useTheme } from '@/hooks/use-theme';
+import { useReminders } from '@/hooks/use-reminders';
 import { Button } from '@/components/ui/button';
 import DashboardView from './components/DashboardView';
 import TournamentsView from './components/TournamentsView';
@@ -17,6 +18,7 @@ function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isMigrating, setIsMigrating] = useState(true);
   const { theme, toggleTheme } = useTheme();
+  useReminders();
 
   useEffect(() => {
     const runMigration = async () => {
