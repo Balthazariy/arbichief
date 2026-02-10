@@ -71,7 +71,7 @@ This application requires sophisticated state management for tournament logic, m
 ### Tournament Reminders
 - **Functionality**: Create, manage, and receive reminders for tournaments with customizable date, time, message, and recurrence patterns (daily, weekly, monthly)
 - **Purpose**: Helps organizers remember important tournament dates and recurring events without relying on external calendar apps
-- **Trigger**: User navigates to "Нагадування" tab in tournament detail view and clicks "Додати нагадування"
+- **Trigger**: User navigates to "Нагадування" tab in tournament detail view and clicks "Додати нагадув��ння"
 - **Progression**: Tournament Detail → Reminders Tab → Add Reminder → Set Date/Time → Select Recurrence (None/Daily/Weekly/Monthly) → Enter Message → Enable/Disable Toggle → Save → Automatic Notification at Scheduled Time → For Recurring: Auto-reschedule Next Occurrence
 - **Success criteria**: Reminders display as toast notifications at scheduled time, can be toggled on/off without deletion, persist between sessions, show on dashboard with upcoming events. One-time reminders mark as notified after display. Recurring reminders automatically update to next occurrence (next day/week/month) after each notification and display last notification date.
 
