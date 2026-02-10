@@ -1,4 +1,4 @@
-import { Trophy, Users, UsersThree, Table, DownloadSimple, Moon, Sun } from '@phosphor-icons/react';
+import { Trophy, Users, UsersThree, Table, DownloadSimple, Moon, Sun, CalendarBlank } from '@phosphor-icons/react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
@@ -11,8 +11,9 @@ import TournamentsView from './components/TournamentsView';
 import PlayersView from './components/PlayersView';
 import TeamsView from './components/TeamsView';
 import ExportView from './components/ExportView';
+import CalendarView from './components/CalendarView';
 
-type View = 'dashboard' | 'tournaments' | 'players' | 'teams' | 'export';
+type View = 'dashboard' | 'tournaments' | 'players' | 'teams' | 'export' | 'calendar';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -50,6 +51,7 @@ function App() {
     { id: 'tournaments' as const, label: 'Турніри', icon: Trophy },
     { id: 'players' as const, label: 'Гравці', icon: Users },
     { id: 'teams' as const, label: 'Команди', icon: UsersThree },
+    { id: 'calendar' as const, label: 'Календар', icon: CalendarBlank },
     { id: 'export' as const, label: 'Експорт', icon: DownloadSimple },
   ];
 
@@ -116,6 +118,7 @@ function App() {
           {currentView === 'tournaments' && <TournamentsView />}
           {currentView === 'players' && <PlayersView />}
           {currentView === 'teams' && <TeamsView />}
+          {currentView === 'calendar' && <CalendarView />}
           {currentView === 'export' && <ExportView />}
         </main>
       </div>

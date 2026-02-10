@@ -75,6 +75,13 @@ This application requires sophisticated state management for tournament logic, m
 - **Progression**: Tournament Detail → Reminders Tab → Add Reminder → Set Date/Time → Select Recurrence (None/Daily/Weekly/Monthly) → Enter Message → Enable/Disable Toggle → Save → Automatic Notification at Scheduled Time → For Recurring: Auto-reschedule Next Occurrence
 - **Success criteria**: Reminders display as toast notifications at scheduled time, can be toggled on/off without deletion, persist between sessions, show on dashboard with upcoming events. One-time reminders mark as notified after display. Recurring reminders automatically update to next occurrence (next day/week/month) after each notification and display last notification date.
 
+### Unified Calendar View
+- **Functionality**: Display all tournament reminders across all tournaments in a unified monthly calendar view with daily reminder details and upcoming reminders list
+- **Purpose**: Provides a centralized overview of all scheduled reminders across tournaments, making it easy to see busy days and plan ahead
+- **Trigger**: User clicks "Календар" in main navigation
+- **Progression**: Main Navigation → Select Calendar → View Current Month → Navigate Between Months (Previous/Next/Today) → Click Day with Reminders → View Day Details → See Upcoming Reminders List
+- **Success criteria**: Calendar displays correct month with days showing reminder indicators (dots), highlights current day, shows all reminders for selected day with tournament context, displays next 5 upcoming reminders sorted by date/time, supports month navigation, and updates in real-time when reminders are added/modified
+
 ## Edge Case Handling
 
 - **Late Registration** - Allow adding players to tournament before first round starts; prevent additions after pairings are confirmed
